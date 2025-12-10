@@ -7,6 +7,7 @@ class ApiConfig(AppConfig):
 
     def ready(self):
         import api.UserProfile
-        import api.TestAPI.model
-        import api.Address.model
+        import api.Guest.model
+        import api.GuestRecord.model
+
         

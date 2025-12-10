@@ -4,12 +4,12 @@ from django.urls import path,include
 from api.Permission import view as permissionView
 from api.Role import view as roleView
 from api.User import view as userView
-from api.TestAPI import view as TestView
-from api.Address import view as AddressView
 from api.ChangeMyPassword.view import ChangeMyPasswordView
 from api.ForgetPassword.view import PasswordResetRequestView
 from api.IsSuperUser.view import CheckUserType
 from api.CreateUser import views as createUserViews
+from api.Guest.view import GuestViewSet
+from api.GuestRecord.view import GuestRecordViewSet
 
 from rest_framework import routers
 from rest_framework import permissions
@@ -20,8 +20,9 @@ router=routers.DefaultRouter()
 router.register(r'user',userView.UserViewset, basename='user'),
 router.register(r'role',roleView.RoleViewset, basename='role'),
 router.register(r'permission', permissionView.PermissionViewset, basename='permission'),
-router.register(r'test', TestView.TestViewset, basename='test'),
-router.register(r'address',AddressView.AddressViewset,basename='address'),
+router.register(r'guest', GuestViewSet, basename='guest'),
+router.register(r'guestRecord', GuestRecordViewSet, basename='guestRecord'),
+
 
 # Create a schema view for drf-yasg
 schema_view = get_schema_view(
