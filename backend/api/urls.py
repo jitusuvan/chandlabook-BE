@@ -10,6 +10,7 @@ from api.IsSuperUser.view import CheckUserType
 from api.CreateUser import views as createUserViews
 from api.Guest.view import GuestViewSet
 from api.GuestRecord.view import GuestRecordViewSet
+from api.Event.view import EventListCreateView, EventDetailView
 
 from rest_framework import routers
 from rest_framework import permissions
@@ -47,4 +48,6 @@ urlpatterns = [
     # path('pass-reset/<str:temp_token>/', PasswordResetConfirmView.as_view(), name='pass-reset'),  # put it in security(auth) app's urls
     path('isSuperUser/', CheckUserType.as_view(), name='isSuperUser'),
     path('createUser/', createUserViews.CreateUserAPI.as_view(), name='create-user'),
+    path('events/', EventListCreateView.as_view(), name='event-list-create'),
+    path('events/<uuid:pk>/', EventDetailView.as_view(), name='event-detail'),
 ]

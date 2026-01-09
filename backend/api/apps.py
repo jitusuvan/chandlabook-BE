@@ -9,5 +9,6 @@ class ApiConfig(AppConfig):
         import api.UserProfile
         import api.Guest.model
         import api.GuestRecord.model
+        import api.Event.model
 
         
