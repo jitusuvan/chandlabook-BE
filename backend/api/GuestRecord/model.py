@@ -24,6 +24,7 @@ class GuestRecord(models.Model):
     select = models.CharField(max_length=10, choices=SELECT_TYPE)      # mukel / aavel
     event_type = models.CharField(max_length=10, choices=EVENT_TYPE, default='chandlo')        # chandlo / marriage
     bride_groom = models.CharField(max_length=100, null=True, blank=True)  # only required for marriage
+    pay_later = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         # If event is selected, copy values from event

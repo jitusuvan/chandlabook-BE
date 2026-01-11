@@ -11,7 +11,7 @@ class GuestRecordViewSet(viewsets.ModelViewSet):
     serializer_class = GuestRecordSerializer
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['guest', 'event', 'select']    # ?event=marriage
+    filterset_fields = ['guest', 'event', 'select', 'pay_later']    # ?event=marriage
     search_fields = ['guest__first_name', 'guest__surname', 'event', 'select']
 
     def list(self, request, *args, **kwargs):

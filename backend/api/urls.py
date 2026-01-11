@@ -12,6 +12,7 @@ from api.Guest.view import GuestViewSet
 from api.GuestRecord.view import GuestRecordViewSet
 from api.Event.view import EventListCreateView, EventDetailView
 from api.Dashboard.view import DashboardView
+from api.Expense.view import ExpenseViewSet
 
 from rest_framework import routers
 from rest_framework import permissions
@@ -24,6 +25,7 @@ router.register(r'role',roleView.RoleViewset, basename='role'),
 router.register(r'permission', permissionView.PermissionViewset, basename='permission'),
 router.register(r'guest', GuestViewSet, basename='guest'),
 router.register(r'guestRecord', GuestRecordViewSet, basename='guestRecord'),
+router.register(r'expense', ExpenseViewSet, basename='expense'),
 
 
 # Create a schema view for drf-yasg

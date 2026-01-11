@@ -5,6 +5,7 @@ from .model import GuestRecord
 class GuestRecordSerializer(serializers.ModelSerializer):
     guest_name = serializers.SerializerMethodField()
     event_name = serializers.SerializerMethodField()
+    payment_status = serializers.SerializerMethodField()
     
     class Meta:
         model = GuestRecord
@@ -17,3 +18,6 @@ class GuestRecordSerializer(serializers.ModelSerializer):
     
     def get_event_name(self, obj):
         return obj.event.name if obj.event else None
+        
+    def get_payment_status(self, obj):
+        return "pending" if obj.pay_later else "paid"
