@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count
 from api.Event.model import Event
 from api.Guest.model import Guest
@@ -7,17 +8,21 @@ from api.GuestRecord.model import GuestRecord
 from api.Expense.model import Expense
 
 class DashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request):
-        # Total counts
-        total_events = Event.objects.count()
-        total_guests = Guest.objects.count()
-        total_records = GuestRecord.objects.count()
+        user = request.user
         
-        # Total amounts
-        total_amount = GuestRecord.objects.aggregate(total=Sum('amount'))['total'] or 0
-        aavel_total = GuestRecord.objects.filter(select='aavel').aggregate(total=Sum('amount'))['total'] or 0
-        mukel_total = GuestRecord.objects.filter(select='mukel').aggregate(total=Sum('amount'))['total'] or 0
-        total_expenses = Expense.objects.aggregate(total=Sum('amount'))['total'] or 0
+        # Total counts filtered by user
+        total_events = Event.objects.filter(user=user).count()
+        total_guests = Guest.objects.filter(user=user).count()
+        total_records = GuestRecord.objects.filter(event__user=user).count()
+        
+        # Total amounts filtered by user
+        total_amount = GuestRecord.objects.filter(event__user=user).aggregate(total=Sum('amount'))['total'] or 0
+        aavel_total = GuestRecord.objects.filter(event__user=user, select='aavel').aggregate(total=Sum('amount'))['total'] or 0
+        mukel_total = GuestRecord.objects.filter(event__user=user, select='mukel').aggregate(total=Sum('amount'))['total'] or 0
+        total_expenses = Expense.objects.filter(event__user=user).aggregate(total=Sum('amount'))['total'] or 0
         
         return Response({
             'total_events': total_events,

@@ -6,9 +6,10 @@ class ApiConfig(AppConfig):
     name = 'api'
 
     def ready(self):
-        import api.UserProfile
+        
         import api.Guest.model
         import api.GuestRecord.model
         import api.Event.model
+        import api.Expense.model
 
         
