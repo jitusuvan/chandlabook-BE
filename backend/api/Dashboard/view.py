@@ -16,12 +16,12 @@ class DashboardView(APIView):
         # Total counts filtered by user
         total_events = Event.objects.filter(user=user).count()
         total_guests = Guest.objects.filter(user=user).count()
-        total_records = GuestRecord.objects.filter(event__user=user).count()
+        total_records = GuestRecord.objects.filter(guest__user=user).count()
         
         # Total amounts filtered by user
-        total_amount = GuestRecord.objects.filter(event__user=user).aggregate(total=Sum('amount'))['total'] or 0
-        aavel_total = GuestRecord.objects.filter(event__user=user, select='aavel').aggregate(total=Sum('amount'))['total'] or 0
-        mukel_total = GuestRecord.objects.filter(event__user=user, select='mukel').aggregate(total=Sum('amount'))['total'] or 0
+        total_amount = GuestRecord.objects.filter(guest__user=user).aggregate(total=Sum('amount'))['total'] or 0
+        aavel_total = GuestRecord.objects.filter(guest__user=user, select='aavel').aggregate(total=Sum('amount'))['total'] or 0
+        mukel_total = GuestRecord.objects.filter(guest__user=user, select='mukel').aggregate(total=Sum('amount'))['total'] or 0
         total_expenses = Expense.objects.filter(event__user=user).aggregate(total=Sum('amount'))['total'] or 0
         
         return Response({
