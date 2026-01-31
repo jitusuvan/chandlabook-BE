@@ -10,6 +10,10 @@ from api.IsSuperUser.view import CheckUserType
 from api.CreateUser import views as createUserViews
 from api.Guest.view import GuestViewSet
 from api.GuestRecord.view import GuestRecordViewSet
+from api.Event.view import EventListCreateView, EventDetailView
+from api.Dashboard.view import DashboardView
+from api.Expense.view import ExpenseViewSet
+from api.UserProfile.view import UserProfileViewSet
 
 from rest_framework import routers
 from rest_framework import permissions
@@ -22,6 +26,8 @@ router.register(r'role',roleView.RoleViewset, basename='role'),
 router.register(r'permission', permissionView.PermissionViewset, basename='permission'),
 router.register(r'guest', GuestViewSet, basename='guest'),
 router.register(r'guestRecord', GuestRecordViewSet, basename='guestRecord'),
+router.register(r'expense', ExpenseViewSet, basename='expense'),
+router.register(r'userProfile', UserProfileViewSet, basename='userProfile'),
 
 
 # Create a schema view for drf-yasg
@@ -47,4 +53,7 @@ urlpatterns = [
     # path('pass-reset/<str:temp_token>/', PasswordResetConfirmView.as_view(), name='pass-reset'),  # put it in security(auth) app's urls
     path('isSuperUser/', CheckUserType.as_view(), name='isSuperUser'),
     path('createUser/', createUserViews.CreateUserAPI.as_view(), name='create-user'),
+    path('events/', EventListCreateView.as_view(), name='event-list-create'),
+    path('events/<uuid:pk>/', EventDetailView.as_view(), name='event-detail'),
+    path('dashboard/', DashboardView.as_view(), name='dashboard'),
 ]
