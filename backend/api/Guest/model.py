@@ -9,7 +9,7 @@ class Guest(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100, blank=True, null=True)
     surname = models.CharField(max_length=100, blank=True, null=True)
-    mobile_no = models.CharField(max_length=15, unique=True)
+    mobile_no = models.CharField(max_length=15, unique=True, blank=True, null=True)
     city = models.CharField(max_length=100)
 
     def __str__(self):
