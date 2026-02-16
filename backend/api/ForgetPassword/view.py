@@ -30,7 +30,7 @@ class PasswordResetRequestView(APIView):
             cache.set(temp_token, {'uid': uid, 'token': token}, timeout=3600)  # Expires in 1 hour
 
             # Frontend URL for password reset
-            frontend_url = getattr(settings, 'FRONTEND_URL', 'https://chandlabook.vercel.app')
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'https://chandlabook.jitu007.in')
             reset_link = f"{frontend_url}/reset-password/{temp_token}"
 
             # Send professional HTML email
