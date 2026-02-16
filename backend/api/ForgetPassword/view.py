@@ -3,7 +3,6 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from django.core.mail import EmailMessage
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,6 +11,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework import serializers
 from django.conf import settings
 from django.core.cache import cache
+from api.utils.email_utils import send_password_reset_email
 import uuid
 
 class PasswordResetRequestView(APIView):
@@ -29,19 +29,12 @@ class PasswordResetRequestView(APIView):
             temp_token = str(uuid.uuid4())
             cache.set(temp_token, {'uid': uid, 'token': token}, timeout=3600)  # Expires in 1 hour
 
-            reset_link = f"{settings.BASE_URL}/auth/pass-reset/{temp_token}/"
+            # Frontend URL for password reset
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'https://chandlabook.vercel.app')
+            reset_link = f"{frontend_url}/reset-password/{temp_token}"
 
-            subject = "Password Reset Request"
-            message = (
-                f"Hi {user.username},<br><br>"
-                f"You requested a password reset. Click the link below to reset your password:<br>"
-                f'<a href="{reset_link}">Reset Password</a><br><br>'
-                "If you did not request this, please ignore this email.<br><br>"
-                "Thank you."
-            )
-            email_message = EmailMessage(subject, message, to=[user.email])
-            email_message.content_subtype = "html"
-            email_message.send()
+            # Send professional HTML email
+            send_password_reset_email(user.email, reset_link, user.username)
 
             return Response(
                 {"detail": "A password reset link has been sent successfully."},
