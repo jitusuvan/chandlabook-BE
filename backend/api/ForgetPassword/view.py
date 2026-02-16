@@ -30,7 +30,7 @@ class PasswordResetRequestView(APIView):
             cache.set(temp_token, {'uid': uid, 'token': token}, timeout=3600)  # Expires in 1 hour
 
             # Frontend URL for password reset
-            frontend_url = getattr(settings, 'FRONTEND_URL', 'https://chandlabook.jitu007.in')
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
             reset_link = f"{frontend_url}/reset-password/{temp_token}"
 
             # Send professional HTML email
@@ -55,6 +55,13 @@ class PasswordResetConfirmView(APIView):
     def post(self, request, temp_token):
         # Get the actual uid and token from cache
         data = cache.get(temp_token)
+        
+        # Debug logging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Temp token: {temp_token}")
+        logger.error(f"Cache data: {data}")
+        
         if not data:
             return Response({"detail": "Invalid or expired link"}, status=status.HTTP_400_BAD_REQUEST)
 

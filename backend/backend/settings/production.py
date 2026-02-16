@@ -10,10 +10,10 @@ DB = os.getenv("DB")
 PASS = os.getenv("PASS")
 
 DEBUG = False
-ALLOWED_HOSTS = [ "https://placeholder.humbingo.in"]
+ALLOWED_HOSTS = ["api.jitu007.in", "chandlabook.jitu007.in"]
 
 CORS_ALLOWED_ORIGINS = [ 
-    "https://placeholder.humbingo.in",
+    "https://chandlabook.jitu007.in",
 ]
 
 DATABASES = {
@@ -25,6 +25,13 @@ DATABASES = {
          'USER':USER,
          'PASSWORD': PASS
      }
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'cache_table',
+    }
 }
 
 BASE_URL = os.getenv("BASE_URL")
