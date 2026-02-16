@@ -130,7 +130,7 @@ def send_password_reset_email(user_email, reset_link, user_name=None):
     msg = EmailMultiAlternatives(
         subject=subject,
         body=text_content,
-        from_email="noreply<noreply@chandlabook.com>",
+        from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user_email]
     )
     
@@ -250,7 +250,7 @@ def send_welcome_email(user_email, user_name):
     msg = EmailMultiAlternatives(
         subject=subject,
         body=text_content,
-        from_email="Chandla Book <noreply@chandlabook.com>",
+        from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user_email]
     )
     
