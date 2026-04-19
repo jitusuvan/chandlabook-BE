@@ -11,6 +11,7 @@ from api.CreateUser import views as createUserViews
 from api.Guest.view import GuestViewSet
 from api.GuestRecord.view import GuestRecordViewSet
 from api.Event.view import EventListCreateView, EventDetailView
+from api.Guest.bulk_import_view import BulkGuestImportWithRecordsView
 from api.Dashboard.view import DashboardView
 from api.Expense.view import ExpenseViewSet
 from api.UserProfile.view import UserProfileViewSet
@@ -57,5 +58,6 @@ urlpatterns = [
     path('createUser/', createUserViews.CreateUserAPI.as_view(), name='create-user'),
     path('events/', EventListCreateView.as_view(), name='event-list-create'),
     path('events/<uuid:pk>/', EventDetailView.as_view(), name='event-detail'),
+    path('bulkImportRecord/', BulkGuestImportWithRecordsView.as_view(), name='bulkImportRecord'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
 ]
