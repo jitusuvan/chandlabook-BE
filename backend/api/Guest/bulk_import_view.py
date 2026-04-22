@@ -61,41 +61,45 @@ class BulkGuestImportWithRecordsView(APIView):
                     if created:
                         guest_new += 1
 
-                    # Silently skip mukel events
+                    # Parse date first
+                    event_date = datetime.strptime(row['date'], '%Y-%m-%d').date()
+
                     if row['select'] == 'mukel':
-                        continue
-
-                    # ✅ Strict date parsing
-                    try:
-                        event_date = datetime.strptime(row['date'], '%Y-%m-%d').date()
-                    except:
-                        raise Exception(f"Invalid date format: {row['date']} (use YYYY-MM-DD)")
-
-                    # ✅ Event (same name + date = same event)
-                    event, _ = Event.objects.get_or_create(
-                        name=row['event_name'],
-                        date=event_date,
-                        user=user,
-                        defaults={
-                            'event_type': row['event_type'],
-                            'select_type': row['select'],
-                            'bride_groom_name': row.get('bride_groom', '') if row['event_type'] == 'marriage' else ''
-                        }
-                    )
-
-                    # ✅ Record (multiple allowed per guest)
-                    GuestRecord.objects.create(
-                        guest=guest,
-                        event=event,
-                        date=event_date,
-                        amount=Decimal(str(row['amount'])),
-                        select=row['select'],
-                        event_type=row['event_type'],
-                        bride_groom=row.get('bride_groom') or None,
-                        pay_later=str(row['pay_later']).lower() == 'true'
-                    )
-
-                    record_new += 1
+                        # No event created, record without event FK (model supports null=True)
+                        GuestRecord.objects.create(
+                            guest=guest,
+                            event=None,
+                            date=event_date,
+                            amount=Decimal(str(row['amount'])),
+                            select=row['select'],
+                            event_type=row['event_type'],
+                            bride_groom=row.get('bride_groom') or None,
+                            pay_later=str(row['pay_later']).lower() == 'true'
+                        )
+                        record_new += 1
+                    else:
+                        # Normal event handling
+                        event, _ = Event.objects.get_or_create(
+                            name=row['event_name'],
+                            date=event_date,
+                            user=user,
+                            defaults={
+                                'event_type': row['event_type'],
+                                'select_type': row['select'],
+                                'bride_groom_name': row.get('bride_groom', '') if row['event_type'] == 'marriage' else ''
+                            }
+                        )
+                        GuestRecord.objects.create(
+                            guest=guest,
+                            event=event,
+                            date=event_date,
+                            amount=Decimal(str(row['amount'])),
+                            select=row['select'],
+                            event_type=row['event_type'],
+                            bride_groom=row.get('bride_groom') or None,
+                            pay_later=str(row['pay_later']).lower() == 'true'
+                        )
+                        record_new += 1
 
                 except Exception as e:
                     errors.append(f"Row {index}: {str(e)}")
