@@ -61,6 +61,10 @@ class BulkGuestImportWithRecordsView(APIView):
                     if created:
                         guest_new += 1
 
+                    # Silently skip mukel events
+                    if row['select'] == 'mukel':
+                        continue
+
                     # ✅ Strict date parsing
                     try:
                         event_date = datetime.strptime(row['date'], '%Y-%m-%d').date()
