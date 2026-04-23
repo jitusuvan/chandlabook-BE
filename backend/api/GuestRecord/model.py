@@ -1,4 +1,3 @@
-# models.py
 import uuid
 from django.db import models
 from api.Guest.model import Guest  # FK guest table
@@ -25,6 +24,9 @@ class GuestRecord(models.Model):
     event_type = models.CharField(max_length=10, choices=EVENT_TYPE, default='chandlo')        # chandlo / marriage
     bride_groom = models.CharField(max_length=100, null=True, blank=True)  # only required for marriage
     pay_later = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ['guest', 'event', 'date', 'amount', 'select']
 
     def save(self, *args, **kwargs):
         # If event is selected, copy values from event
