@@ -4,24 +4,41 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
-import csv
-from io import StringIO
+import pandas as pd
 from decimal import Decimal
 from datetime import datetime
 from django.db import transaction
 
-def parse_flexible_date(date_str):
-    """Support YYYY-MM-DD, DD-MM-YYYY, DD-MM-YY"""
-    for fmt in ['%Y-%m-%d', '%d-%m-%Y', '%d-%m-%y']:
-        try:
-            return datetime.strptime(date_str, fmt).date()
-        except ValueError:
-            continue
-    raise ValueError(f"Invalid date '{date_str}'. Expected: YYYY-MM-DD, DD-MM-YYYY, or DD-MM-YY")
-
 from api.Guest.model import Guest
 from api.GuestRecord.model import GuestRecord
 from api.Event.model import Event
+
+
+def parse_flexible_date(value):
+    """
+    Support:
+    YYYY-MM-DD
+    DD-MM-YYYY
+    DD-MM-YY
+    Excel datetime/date
+    """
+    if pd.isna(value):
+        raise ValueError("Date is empty")
+
+    if hasattr(value, "date"):
+        return value.date()
+
+    value = str(value).strip()
+
+    for fmt in ['%Y-%m-%d', '%d-%m-%Y', '%d-%m-%y']:
+        try:
+            return datetime.strptime(value, fmt).date()
+        except ValueError:
+            continue
+
+    raise ValueError(
+        f"Invalid date '{value}'. Expected: YYYY-MM-DD, DD-MM-YYYY, or DD-MM-YY"
+    )
 
 
 class BulkGuestImportWithRecordsView(APIView):
@@ -29,93 +46,128 @@ class BulkGuestImportWithRecordsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        file_obj = request.FILES.get('file')
+        file_obj = request.FILES.get("file")
 
         if not file_obj:
-            return Response({'error': 'File required'}, status=400)
+            return Response(
+                {"error": "XLSX file required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         user = request.user
 
-        content = file_obj.read().decode('utf-8')
-        reader = csv.DictReader(StringIO(content))
-        rows = list(reader)
+        try:
+            df = pd.read_excel(file_obj, engine="openpyxl")
+        except Exception as e:
+            return Response(
+                {"error": f"Unable to read XLSX file: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # ✅ Header validation
+        # header cleanup
+        df.columns = df.columns.str.strip().str.lower()
+        
+        df.rename(columns={
+           "event_id_or_name": "event_name",
+           "guest_mobile_no": "mobile_no",
+           }, inplace=True)
+        
+        
         required_fields = [
-            'first_name','last_name','surname','mobile_no','city',
-            'event_name','date','amount','select','event_type','bride_groom','pay_later'
-        ]
+           'first_name','last_name','surname','mobile_no','city',
+           'event_name','date','amount','select',
+           'event_type','bride_groom','pay_later'
+             ]
 
-        if not rows or not all(field in rows[0] for field in required_fields):
-            return Response({'error': f'Invalid CSV header. Required: {required_fields}'}, status=400)
+        if not all(field in df.columns for field in required_fields):
+            return Response(
+                {
+                    "error": f"Invalid header. Required: {required_fields}. Supports XLSX"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        rows = df.fillna("").to_dict(orient="records")
 
         guest_new = 0
         record_new = 0
         errors = []
 
         with transaction.atomic():
-            for index, row in enumerate(rows, start=1):
+            for index, row in enumerate(rows, start=2):  # Excel row starts after header
                 try:
-                    # ✅ Guest (reuse if exists)
-                    guest, created = Guest.objects.get_or_create(
-                        mobile_no=row['mobile_no'],
+                    guest, created = Guest.objects.filter(user=user).get_or_create(
+                        mobile_no=str(row['mobile_no']).strip(),
                         defaults={
                             'user': user,
-                            'first_name': row['first_name'],
-                            'last_name': row.get('last_name', ''),
-                            'surname': row.get('surname', ''),
-                            'city': row['city']
+                            'first_name': str(row['first_name']).strip(),
+                            'last_name': str(row['last_name']).strip(),
+                            'surname': str(row['surname']).strip(),
+                            'city': str(row['city']).strip(),
                         }
                     )
+
                     if created:
                         guest_new += 1
 
-                    # Parse date first
                     event_date = parse_flexible_date(row['date'])
 
-                    if row['select'] == 'mukel':
-                        # No event created, record without event FK (model supports null=True)
-                        GuestRecord.objects.create(
+                    if str(row['select']).strip().lower() == "mukel":
+                        _, created_record = GuestRecord.objects.get_or_create(
                             guest=guest,
-                            event=None,
                             date=event_date,
                             amount=Decimal(str(row['amount'])),
-                            select=row['select'],
-                            event_type=row['event_type'],
-                            bride_groom=row.get('bride_groom') or None,
-                            pay_later=str(row['pay_later']).lower() == 'true'
+                            select=str(row['select']).strip(),
+                            defaults={
+                                'event': None,
+                                'event_type': str(row['event_type']).strip(),
+                                'bride_groom': str(row['bride_groom']).strip() or None,
+                                'pay_later': str(row['pay_later']).strip().lower() == "true"
+                            }
                         )
-                        record_new += 1
+                        if created_record:
+                            record_new += 1
+
                     else:
-                        # Normal event handling
                         event, _ = Event.objects.get_or_create(
-                            name=row['event_name'],
+                            name=str(row['event_name']).strip(),
                             date=event_date,
                             user=user,
                             defaults={
-                                'event_type': row['event_type'],
-                                'select_type': row['select'],
-                                'bride_groom_name': row.get('bride_groom', '') if row['event_type'] == 'marriage' else ''
+                                'event_type': str(row['event_type']).strip(),
+                                'select_type': str(row['select']).strip(),
+                                'bride_groom_name': (
+                                    str(row['bride_groom']).strip()
+                                    if str(row['event_type']).strip().lower() == "marriage"
+                                    else ""
+                                )
                             }
                         )
-                        GuestRecord.objects.create(
+
+                        _, created_record = GuestRecord.objects.get_or_create(
                             guest=guest,
                             event=event,
                             date=event_date,
                             amount=Decimal(str(row['amount'])),
-                            select=row['select'],
-                            event_type=row['event_type'],
-                            bride_groom=row.get('bride_groom') or None,
-                            pay_later=str(row['pay_later']).lower() == 'true'
+                            select=str(row['select']).strip(),
+                            defaults={
+                                'event_type': str(row['event_type']).strip(),
+                                'bride_groom': str(row['bride_groom']).strip() or None,
+                                'pay_later': str(row['pay_later']).strip().lower() == "true"
+                            }
                         )
-                        record_new += 1
+                        if created_record:
+                            record_new += 1
 
                 except Exception as e:
                     errors.append(f"Row {index}: {str(e)}")
 
-        return Response({
-            'success': True,
-            'guests_created': guest_new,
-            'records_created': record_new,
-            'errors': errors
-        }, status=status.HTTP_201_CREATED)
+        return Response(
+            {
+                "success": True,
+                "guests_created": guest_new,
+                "records_created": record_new,
+                "errors": errors
+            },
+            status=status.HTTP_201_CREATED
+        )
