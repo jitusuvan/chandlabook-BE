@@ -5,6 +5,15 @@ from decimal import Decimal
 from datetime import datetime
 from django.db import transaction
 
+def parse_flexible_date(date_str):
+    """Support YYYY-MM-DD, DD-MM-YYYY, DD-MM-YY"""
+    for fmt in ['%Y-%m-%d', '%d-%m-%Y', '%d-%m-%y']:
+        try:
+            return datetime.strptime(date_str, fmt).date()
+        except ValueError:
+            continue
+    raise ValueError(f"Invalid date '{date_str}'. Expected: YYYY-MM-DD, DD-MM-YYYY, or DD-MM-YY")
+
 from api.Guest.model import Guest
 from api.GuestRecord.model import GuestRecord
 from api.Event.model import Event
@@ -51,7 +60,7 @@ class Command(BaseCommand):
                     if created:
                         guest_new += 1
 
-                    event_date = datetime.strptime(row['date'], '%Y-%m-%d').date()
+                    event_date = parse_flexible_date(row['date'])
 
                     event, _ = Event.objects.get_or_create(
                         name=row['event_name'],
