@@ -8,7 +8,8 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        return UserProfile.objects.all()
+        return UserProfile.objects.filter(user=self.request.user)
+
     
     def get_object(self):
         return UserProfile.objects.get_or_create(user_id=self.kwargs['pk'])[0]
