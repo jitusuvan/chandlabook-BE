@@ -16,6 +16,7 @@ from api.Dashboard.view import DashboardView
 from api.Expense.view import ExpenseViewSet
 from api.UserProfile.view import UserProfileViewSet
 from api.UserExist.view import UserExistView
+from api.User.view import GetMyProfileView
 
 from rest_framework import routers
 from rest_framework import permissions
@@ -60,4 +61,5 @@ urlpatterns = [
     path('events/<uuid:pk>/', EventDetailView.as_view(), name='event-detail'),
     path('bulkImportRecord/', BulkGuestImportWithRecordsView.as_view(), name='bulkImportRecord'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
+    path('user/profile/', GetMyProfileView.as_view(), name='my-profile'),
 ]
