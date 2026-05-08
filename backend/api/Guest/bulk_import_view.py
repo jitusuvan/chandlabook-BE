@@ -57,7 +57,11 @@ class BulkGuestImportWithRecordsView(APIView):
         user = request.user
 
         try:
-            df = pd.read_excel(file_obj, engine="openpyxl")
+            filename = file_obj.name
+            if filename.endswith(".xls"):
+                df = pd.read_excel(file_obj, engine="xlrd")
+            else:
+                df = pd.read_excel(file_obj, engine="openpyxl")
         except Exception as e:
             return Response(
                 {"error": f"Unable to read XLSX file: {str(e)}"},
