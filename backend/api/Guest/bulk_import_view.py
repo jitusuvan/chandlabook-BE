@@ -100,8 +100,10 @@ class BulkGuestImportWithRecordsView(APIView):
         with transaction.atomic():
             for index, row in enumerate(rows, start=2):  # Excel row starts after header
                 try:
+                    raw_mobile = row['mobile_no']
+                    mobile_no_str = str(int(float(raw_mobile))).strip() if raw_mobile != "" else ""
                     guest, created = Guest.objects.filter(user=user).get_or_create(
-                        mobile_no=str(row['mobile_no']).strip(),
+                        mobile_no=mobile_no_str,
                         defaults={
                             'user': user,
                             'first_name': str(row['first_name']).strip(),
@@ -116,7 +118,8 @@ class BulkGuestImportWithRecordsView(APIView):
 
                     event_date = parse_flexible_date(row['date'])
 
-                    if str(row['select']).strip().lower() == "mukel":
+                    select_value = str(row['select']).strip().lower()
+                    if select_value == "mukel":
                         _, created_record = GuestRecord.objects.get_or_create(
                             guest=guest,
                             date=event_date,
